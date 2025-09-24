@@ -106,29 +106,31 @@ jobs:
             echo "Error: Unrelated file 'temp-file.txt' was committed"
             exit 1
           fi
-          echo "Verified: Unrelated files are not committed"
+
+          # Normalize paths by removing ./ prefix and sorting
+          normalize_paths() {
+            echo "$1" | tr ' ' '\n' | sed 's|^\./||' | sort | uniq | tr '\n' ' ' | xargs
+          }
+
+          digestabot_normalized=$(normalize_paths "$digestabot_changed_files")
+          git_normalized=$(normalize_paths "$git_modified_files")
 
           # If no files were changed by digestabot, git should also show no changes
-          if [ -z "$digestabot_changed_files" ]; then
-            if [ -z "$git_modified_files" ]; then
+          if [ -z "$digestabot_normalized" ]; then
+            if [ -z "$git_normalized" ]; then
               echo "Correct: No digests changed, no files modified"
               exit 0
             else
-              echo "Error: Digestabot changed no files but git shows modifications: $git_modified_files"
+              echo "Error: Digestabot changed no files but git shows modifications: $git_normalized"
               exit 1
             fi
           fi
 
           # If digestabot changed files, verify they match exactly with git's view
-          digestabot_sorted=$(echo "$digestabot_changed_files" | tr ' ' '\n' | sort | tr '\n' ' ' | xargs)
-          git_sorted=$(echo "$git_modified_files" | tr ' ' '\n' | sort | tr '\n' ' ' | xargs)
-
-          if [ "$digestabot_sorted" = "$git_sorted" ]; then
-            echo "Correct: Files reported by digestabot match git modifications exactly"
-
+          if [ "$digestabot_normalized" = "$git_normalized" ]; then
             # Additional verification: check that each modified file actually has digest changes
-            echo '${{ steps.digestabot.outputs.json }}' | jq -r '.updates[] | .file' | sort | uniq > /tmp/files_with_digest_changes
-            echo "$git_modified_files" | tr ' ' '\n' | sort > /tmp/git_modified_files
+            echo '${{ steps.digestabot.outputs.json }}' | jq -r '.updates[] | .file' | sed 's|^\./||' | sort | uniq > /tmp/files_with_digest_changes
+            echo "$git_normalized" | tr ' ' '\n' | sort > /tmp/git_modified_files
 
             if diff /tmp/files_with_digest_changes /tmp/git_modified_files >/dev/null; then
               echo "Verified: All modified files have actual digest changes"
