@@ -91,8 +91,8 @@ runs:
     - uses: imjasonh/setup-crane@31b88efe9de28ae0ffa220711af4b60be9435f6e # v0.4
     - uses: nais/login@e7cf2c159677dc7c7d599feff5f808f2bf59c7cf # v0
       if: ${{ inputs.team }}
-        with:
-          team: ${{ inputs.team }}
+      with:
+        team: ${{ inputs.team }}
     - shell: bash
       id: update_files
       run: |
