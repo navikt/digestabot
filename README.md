@@ -16,29 +16,12 @@ This can be used to keep tags up-to-date whilst maintaining a reproducible build
 Basic usage:
 
 ```yaml
-    - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### Authentication
-When accessing images in a private Chainguard registry, you will need to create an assumable identity with the `viewer` role, and add a step to set up the `chainctl` prior to running digestabot.
-
-Authentication example:
-
-```yaml
-...
-    - uses: chainguard-dev/setup-chainctl@be0acd273acf04bfdf91f51198327e719f6af978 # v0.4.0
-        with:
-          identity: ${{ secrets.CHAINCTL_IDENTITY }}
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-    - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
+    - uses: navikt/digestabot@1.0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-...
+        team: YOUR_NAIS_TEAM_HERE # required, used for GAR authentication
 ```
+
 
 ## Scenarios
 
@@ -70,9 +53,10 @@ jobs:
     steps:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-    - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
+    - uses: navikt/digestabot@1.0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        team: YOUR_NAIS_TEAM_HERE # required, used for GAR authentication
         signoff: true # optional
         author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com> # optional
         committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> # optional
@@ -91,10 +75,11 @@ The schema of the output is described in [`action.yml`](action.yml).
 
 ```yaml
     # Run digestabot
-    - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
+    - uses: navikt/digestabot@1.0
       id: digestabot
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        team: appsec
 
     # Iterate over the updates in the `json` output
     - shell: bash
@@ -178,6 +163,7 @@ patchesJSON6902:
 | `commit-message` | The message to use when committing changes.  | `Update images digests` |
 | `create-pr` | Create a PR or just keep the changes locally.  | `true` |
 | `use-gitsign` | Use gitsign to sign commits.  | `true` |
+| `team` | Nais team used for GAR authentication  | `appsec` |
 
 ### Outputs
 
