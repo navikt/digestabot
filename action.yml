@@ -152,7 +152,7 @@ runs:
                 '.updates += [{file: $file, image: $image, digest: $digest, updated_digest: $updated_digest}]' <<<"${json}")
             fi
           done
-        done < <(find "${{ inputs.working-dir }}" -type f \( -name "*.yaml" -o -name "*.yml" -o -name "Dockerfile*" -o -name "Makefile*" -o -name "*.sh"  -o -name "*.tf" -o -name "*.tfvars" \) -print0)
+        done < <(find "${INPUTS_WORKING_DIR}" -type f \( -name "*.yaml" -o -name "*.yml" -o -name "Dockerfile*" -o -name "Makefile*" -o -name "*.sh"  -o -name "*.tf" -o -name "*.tfvars" \) -print0)
 
         echo "json=${json}" >> "${GITHUB_OUTPUT}"
         
@@ -164,6 +164,8 @@ runs:
         else
           echo "changed_files=" >> "${GITHUB_OUTPUT}"
         fi
+      env:
+        INPUTS_WORKING_DIR: ${{ inputs.working-dir }}
 
     - name: Check workspace
       id: create_pr_update
