@@ -13,19 +13,6 @@ inputs:
     description: 'GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)'
     required: true
     default: ${{ github.token }}
-  signoff:
-    description: 'Add `Signed-off-by` line by the committer at the end of the commit log message.'
-    default: false
-  author:
-    description: >
-      The author name and email address in the format `Display Name <email@address.com>`.
-      Defaults to the user who triggered the workflow run.
-    default: '${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>'
-  committer:
-    description: >
-      The committer name and email address in the format `Display Name <email@address.com>`.
-      Defaults to the GitHub Actions bot user.
-    default: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
   labels-for-pr:
     description: 'A comma or newline separated list of labels to be used in the pull request.'
     default: automated pr, kind/cleanup, release-note-none
@@ -46,12 +33,6 @@ inputs:
   commit-message:
     description: 'The message to use when committing changes.'
     default: 'Update images digests'
-  create-pr:
-    description: 'Create a PR or just keep the changes locally.'
-    default: true
-  use-gitsign:
-    description: 'Use gitsign to sign commits.'
-    default: 'true'
   team:
     description: 'Nais team used for GAR authentication'
     required: false
@@ -169,47 +150,109 @@ runs:
 
     - name: Check workspace
       id: create_pr_update
-      env:
-        CREATE_PR: ${{ inputs.create-pr }}
       shell: bash
       run: |
         git diff --stat
         echo "create_pr_update=false" >> $GITHUB_OUTPUT
-        if [[ $(git diff --stat) != '' ]] && [[ "${CREATE_PR}" == 'true' ]]; then
+        if [[ $(git diff --stat) != '' ]]; then
           echo "create_pr_update=true" >> $GITHUB_OUTPUT
           echo "diff<<EOF" >> "${GITHUB_OUTPUT}"
           git diff >> "${GITHUB_OUTPUT}"
           echo "EOF" >> "${GITHUB_OUTPUT}"
         fi
 
-    # Configure gitsign for signed commits
-    - uses: chainguard-dev/actions/setup-gitsign@be7b31a01af8ce7228fe901326f1d223fb788e14 # v1.14.12
-      if: ${{ steps.create_pr_update.outputs.create_pr_update == 'true' && inputs.use-gitsign == 'true' }}
-
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
       if: ${{ steps.create_pr_update.outputs.create_pr_update == 'true' }}
       id: pull_request
-      with:
-        token: ${{ inputs.token }}
-        commit-message: ${{ inputs.commit-message }}
-        title: ${{ inputs.title-for-pr }}
-        body: |
-          ${{ inputs.description-for-pr }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        PR_TITLE: ${{ inputs.title-for-pr }}
+        PR_BODY: ${{ inputs.description-for-pr }}
+        PR_LABELS: ${{ inputs.labels-for-pr }}
+        PR_BRANCH: ${{ inputs.branch-for-pr }}
+        DIFF: ${{ steps.create_pr_update.outputs.diff }}
+        BASE_BRANCH: ${{ github.ref_name }}
+        CHANGED_FILES: ${{ steps.update_files.outputs.changed_files }}
+      run: |
+        # Create and checkout branch
+        git checkout -b "${PR_BRANCH}"
 
-          ## Changes
-          <details>
+        # Stage only the changed files from digest updates
+        if [[ -n "${CHANGED_FILES}" ]]; then
+          while IFS= read -r file; do
+            [[ -n "$file" ]] && git add "$file"
+          done <<< "${CHANGED_FILES}"
+        else
+          echo "No files to commit"
+          exit 0
+        fi
 
-          ```diff
-          ${{ steps.create_pr_update.outputs.diff }}
-          ```
+        # Create commit
+        commit_args=()
+        if [[ "${SIGNOFF}" == "true" ]]; then
+          commit_args+=("--signoff")
+        fi
+        commit_args+=("--message" "${COMMIT_MESSAGE}")
 
-          </details>
-        labels: ${{ inputs.labels-for-pr }}
-        branch: ${{ inputs.branch-for-pr }}
-        signoff: ${{ inputs.signoff }}
-        committer: ${{ inputs.committer }}
-        author: ${{ inputs.author }}
-        sign-commits: ${{ inputs.use-gitsign != 'true' }} # Sign commits with github if gitsign is not configured
-        delete-branch: true
-        add-paths: ${{ steps.update_files.outputs.changed_files }}
+        git commit "${commit_args[@]}"
+
+        # Push branch
+        git push origin "${PR_BRANCH}" --force
+
+        # Create PR body with diff
+        PR_BODY_WITH_DIFF=$(cat <<EOF
+        ${PR_BODY}
+
+        ## Changes
+        <details>
+
+        \`\`\`diff
+        ${DIFF}
+        \`\`\`
+
+        </details>
+        EOF
+        )
+
+        # Create or update pull request using gh CLI
+        # Check if PR already exists
+        existing_pr=$(gh pr list --head "${PR_BRANCH}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+        if [[ -n "${existing_pr}" ]]; then
+          echo "Updating existing PR #${existing_pr}"
+          gh pr edit "${existing_pr}" \
+            --title "${PR_TITLE}" \
+            --body "${PR_BODY_WITH_DIFF}"
+
+          # Update labels
+          IFS=',' read -ra LABEL_ARRAY <<< "${PR_LABELS}"
+          for label in "${LABEL_ARRAY[@]}"; do
+            label=$(echo "$label" | xargs) # trim whitespace
+            gh pr edit "${existing_pr}" --add-label "${label}" || true
+          done
+
+          echo "pull-request-number=${existing_pr}" >> "${GITHUB_OUTPUT}"
+        else
+          echo "Creating new pull request"
+
+          # Prepare labels argument
+          label_args=()
+          IFS=',' read -ra LABEL_ARRAY <<< "${PR_LABELS}"
+          for label in "${LABEL_ARRAY[@]}"; do
+            label=$(echo "$label" | xargs) # trim whitespace
+            [[ -n "$label" ]] && label_args+=("--label" "${label}")
+          done
+
+          pr_url=$(gh pr create \
+            --title "${PR_TITLE}" \
+            --body "${PR_BODY_WITH_DIFF}" \
+            --base "${BASE_BRANCH}" \
+            --head "${PR_BRANCH}" \
+            "${label_args[@]}")
+
+          pr_number=$(echo "${pr_url}" | grep -o '[0-9]*$')
+          echo "pull-request-number=${pr_number}" >> "${GITHUB_OUTPUT}"
+          echo "Created PR #${pr_number}: ${pr_url}"
+        fi
