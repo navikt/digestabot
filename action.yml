@@ -33,6 +33,9 @@ inputs:
   commit-message:
     description: 'The message to use when committing changes.'
     default: 'Update images digests'
+  create-pr:
+    description: 'Create a PR or just keep the changes locally.'
+    default: 'true'
   team:
     description: 'Nais team used for GAR authentication'
     required: false
@@ -150,11 +153,13 @@ runs:
 
     - name: Check workspace
       id: create_pr_update
+      env:
+        CREATE_PR: ${{ inputs.create-pr }}
       shell: bash
       run: |
         git diff --stat
         echo "create_pr_update=false" >> $GITHUB_OUTPUT
-        if [[ $(git diff --stat) != '' ]]; then
+        if [[ $(git diff --stat) != '' ]] && [[ "${CREATE_PR}" == 'true' ]]; then
           echo "create_pr_update=true" >> $GITHUB_OUTPUT
           echo "diff<<EOF" >> "${GITHUB_OUTPUT}"
           git diff >> "${GITHUB_OUTPUT}"
@@ -190,13 +195,7 @@ runs:
         fi
 
         # Create commit
-        commit_args=()
-        if [[ "${SIGNOFF}" == "true" ]]; then
-          commit_args+=("--signoff")
-        fi
-        commit_args+=("--message" "${COMMIT_MESSAGE}")
-
-        git commit "${commit_args[@]}"
+        git commit --message "${COMMIT_MESSAGE}"
 
         # Push branch
         git push origin "${PR_BRANCH}" --force
