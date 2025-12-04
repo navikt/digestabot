@@ -57,9 +57,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         team: YOUR_NAIS_TEAM_HERE # required, used for GAR authentication
-        signoff: true # optional
-        author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com> # optional
-        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> # optional
         labels-for-pr: automated pr, kind/cleanup, release-note-none # optional
         branch-for-pr: update-digests # optional
         title-for-pr: Update images digests # optional
@@ -153,17 +150,12 @@ patchesJSON6902:
 |------|-------------|--------|
 | `working-dir` | Working directory to run the digestabot, to run in a specific path, if not set will run from the root  | `.` |
 | `token` | GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)  | `${{ github.token }}` |
-| `signoff` | Add `Signed-off-by` line by the committer at the end of the commit log message.  | `false` |
-| `author` | The author name and email address in the format `Display Name <email@address.com>`. Defaults to the user who triggered the workflow run.  | `${{ github.actor }} <${{ github.actor_id }}+${{...` |
-| `committer` | The committer name and email address in the format `Display Name <email@address.com>`. Defaults to the GitHub Actions bot user.  | `github-actions[bot] <41898282+github-actions[bo...` |
 | `labels-for-pr` | A comma or newline separated list of labels to be used in the pull request.  | `automated pr, kind/cleanup, release-note-none` |
 | `branch-for-pr` | The pull request branch name.  | `update-digests` |
 | `title-for-pr` | The title of the pull request.  | `Update images digests` |
 | `description-for-pr` | The description of the pull request.  | `Update images digests ...` |
 | `commit-message` | The message to use when committing changes.  | `Update images digests` |
-| `create-pr` | Create a PR or just keep the changes locally.  | `true` |
-| `use-gitsign` | Use gitsign to sign commits.  | `true` |
-| `team` | Nais team used for GAR authentication  | `appsec` |
+| `team` | Nais team used for GAR authentication  | `null` |
 
 ### Outputs
 
