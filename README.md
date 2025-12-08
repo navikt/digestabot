@@ -155,6 +155,7 @@ patchesJSON6902:
 | `title-for-pr` | The title of the pull request.  | `Update images digests` |
 | `description-for-pr` | The description of the pull request.  | `Update images digests ...` |
 | `commit-message` | The message to use when committing changes.  | `Update images digests` |
+| `create-pr` | Create a PR or just keep the changes locally.  | `true` |
 | `team` | Nais team used for GAR authentication  | `null` |
 
 ### Outputs
