@@ -31,7 +31,7 @@ inputs:
     default: 'Update images digests'
   create-pr:
     description: 'Create a PR or just keep the changes locally.'
-    default: true
+    default: 'true'
   team:
     description: 'Nais team used for GAR authentication'
     required: false
