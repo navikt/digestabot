@@ -150,10 +150,10 @@ patchesJSON6902:
 |------|-------------|--------|
 | `working-dir` | Working directory to run the digestabot, to run in a specific path, if not set will run from the root  | `.` |
 | `token` | GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)  | `${{ github.token }}` |
-| `labels-for-pr` | A comma or newline separated list of labels to be used in the pull request.  | `automated pr, kind/cleanup, release-note-none` |
+| `labels-for-pr` | A comma or newline separated list of labels to be used in the pull request.  | `automated pr` |
 | `branch-for-pr` | The pull request branch name.  | `update-digests` |
 | `title-for-pr` | The title of the pull request.  | `Update images digests` |
-| `description-for-pr` | The description of the pull request.  | `Update images digests ...` |
+| `description-for-pr` | The description of the pull request.  | `Update images digests` |
 | `commit-message` | The message to use when committing changes.  | `Update images digests` |
 | `create-pr` | Create a PR or just keep the changes locally.  | `true` |
 | `team` | Nais team used for GAR authentication  | `null` |
