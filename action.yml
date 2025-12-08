@@ -13,22 +13,9 @@ inputs:
     description: 'GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)'
     required: true
     default: ${{ github.token }}
-  signoff:
-    description: 'Add `Signed-off-by` line by the committer at the end of the commit log message.'
-    default: false
-  author:
-    description: >
-      The author name and email address in the format `Display Name <email@address.com>`.
-      Defaults to the user who triggered the workflow run.
-    default: '${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>'
-  committer:
-    description: >
-      The committer name and email address in the format `Display Name <email@address.com>`.
-      Defaults to the GitHub Actions bot user.
-    default: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
   labels-for-pr:
     description: 'A comma or newline separated list of labels to be used in the pull request.'
-    default: automated pr, kind/cleanup, release-note-none
+    default: automated pr
   branch-for-pr:
     description: 'The pull request branch name.'
     default: 'update-digests'
@@ -39,10 +26,6 @@ inputs:
     description: 'The description of the pull request.'
     default: |
       Update images digests
-
-      ```release-note
-      NONE
-      ```
   commit-message:
     description: 'The message to use when committing changes.'
     default: 'Update images digests'
@@ -207,9 +190,7 @@ runs:
           </details>
         labels: ${{ inputs.labels-for-pr }}
         branch: ${{ inputs.branch-for-pr }}
-        signoff: ${{ inputs.signoff }}
-        committer: ${{ inputs.committer }}
-        author: ${{ inputs.author }}
-        sign-commits: ${{ inputs.use-gitsign != 'true' }} # Sign commits with github if gitsign is not configured
+        signoff: true
+        sign-commits: true
         delete-branch: true
         add-paths: ${{ steps.update_files.outputs.changed_files }}
