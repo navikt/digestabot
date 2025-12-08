@@ -51,7 +51,7 @@ jobs:
             '.updates[] | .digest != .updated_digest'
           )
           for check in "${checks[@]}"; do
-            jq -e "${check}" <<<'${STEPS_DIGESTABOT_OUTPUTS_JSON}'
+            echo "${STEPS_DIGESTABOT_OUTPUTS_JSON}" | jq -e "${check}"
           done
         env:
           STEPS_DIGESTABOT_OUTPUTS_JSON: ${{ steps.digestabot.outputs.json }}
@@ -94,7 +94,7 @@ jobs:
         shell: bash
         run: |
           # Get the list of files that digestabot says it changed
-          digestabot_changed_files=$(echo '${STEPS_DIGESTABOT_OUTPUTS_CHANGED_FILES}' | tr '\n' ' ' | xargs)
+          digestabot_changed_files=$(echo "${STEPS_DIGESTABOT_OUTPUTS_CHANGED_FILES}" | tr '\n' ' ' | xargs)
 
           # Get the list of files that git says are modified
           git_modified_files=$(git diff --name-only && git diff --cached --name-only | sort | uniq | tr '\n' ' ' | xargs)
@@ -131,7 +131,7 @@ jobs:
           # If digestabot changed files, verify they match exactly with git's view
           if [ "$digestabot_normalized" = "$git_normalized" ]; then
             # Additional verification: check that each modified file actually has digest changes
-            echo '${STEPS_DIGESTABOT_OUTPUTS_JSON}' | jq -r '.updates[] | .file' | sed 's|^\./||' | sort | uniq > /tmp/files_with_digest_changes
+            echo "${STEPS_DIGESTABOT_OUTPUTS_JSON}" | jq -r '.updates[] | .file' | sed 's|^\./||' | sort | uniq > /tmp/files_with_digest_changes
             echo "$git_normalized" | tr ' ' '\n' | sort > /tmp/git_modified_files
 
             if diff /tmp/files_with_digest_changes /tmp/git_modified_files >/dev/null; then

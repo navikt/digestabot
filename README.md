@@ -57,9 +57,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         team: YOUR_NAIS_TEAM_HERE # required, used for GAR authentication
-        signoff: true # optional
-        author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com> # optional
-        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> # optional
         labels-for-pr: automated pr, kind/cleanup, release-note-none # optional
         branch-for-pr: update-digests # optional
         title-for-pr: Update images digests # optional
@@ -159,7 +156,6 @@ patchesJSON6902:
 | `description-for-pr` | The description of the pull request.  | `Update images digests` |
 | `commit-message` | The message to use when committing changes.  | `Update images digests` |
 | `create-pr` | Create a PR or just keep the changes locally.  | `true` |
-| `use-gitsign` | Use gitsign to sign commits.  | `true` |
 | `team` | Nais team used for GAR authentication  | `null` |
 
 ### Outputs
