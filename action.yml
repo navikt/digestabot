@@ -31,7 +31,7 @@ inputs:
     default: 'Update images digests'
   create-pr:
     description: 'Create a PR or just keep the changes locally.'
-    default: 'true'
+    default: true
   team:
     description: 'Nais team used for GAR authentication'
     required: false
@@ -163,35 +163,22 @@ runs:
         fi
 
     - name: Create Pull Request
+      uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
       if: ${{ steps.create_pr_update.outputs.create_pr_update == 'true' }}
       id: pull_request
-      shell: bash
-      env:
-        GH_TOKEN: ${{ inputs.token }}
-        COMMIT_MESSAGE: ${{ inputs.commit-message }}
-        PR_TITLE: ${{ inputs.title-for-pr }}
-        PR_BODY: ${{ inputs.description-for-pr }}
-        PR_LABELS: ${{ inputs.labels-for-pr }}
-        PR_BRANCH: ${{ inputs.branch-for-pr }}
-        DIFF: ${{ steps.create_pr_update.outputs.diff }}
-        BASE_BRANCH: ${{ github.ref_name }}
-        CHANGED_FILES: ${{ steps.update_files.outputs.changed_files }}
-      run: |
-        # Create and checkout branch
-        git checkout -b "${PR_BRANCH}"
+      with:
+        token: ${{ inputs.token }}
+        commit-message: ${{ inputs.commit-message }}
+        title: ${{ inputs.title-for-pr }}
+        body: |
+          ${{ inputs.description-for-pr }}
 
-        # Stage only the changed files from digest updates
-        if [[ -n "${CHANGED_FILES}" ]]; then
-          while IFS= read -r file; do
-            [[ -n "$file" ]] && git add "$file"
-          done <<< "${CHANGED_FILES}"
-        else
-          echo "No files to commit"
-          exit 0
-        fi
+          ## Changes
+          <details>
 
-        # Create commit
-        git commit --message "${COMMIT_MESSAGE}"
+          ```diff
+          ${{ steps.create_pr_update.outputs.diff }}
+          ```
 
           </details>
         labels: ${{ inputs.labels-for-pr }}
