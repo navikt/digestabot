@@ -170,7 +170,6 @@ runs:
         token: ${{ inputs.token }}
         commit-message: ${{ inputs.commit-message }}
         title: ${{ inputs.title-for-pr }}
-        author: digestabot[bot] <${{ github.actor_id }}+digestabot[bot]@users.noreply.github.com>
         body: |
           ${{ inputs.description-for-pr }}
 
