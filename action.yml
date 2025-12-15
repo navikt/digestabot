@@ -15,7 +15,7 @@ inputs:
     default: ${{ github.token }}
   labels-for-pr:
     description: 'A comma or newline separated list of labels to be used in the pull request.'
-    default: automated pr
+    default: digestabot
   branch-for-pr:
     description: 'The pull request branch name.'
     default: 'update-digests'
