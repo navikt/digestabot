@@ -80,6 +80,7 @@ runs:
         set +o errexit
         json='{}'
         changed_files=()
+        images_found=false
         while IFS= read -r -d '' file; do
           if [[ "$file" == *testdata* ]]; then
             echo "Skipping testdata ${file}"
@@ -103,6 +104,7 @@ runs:
             fi
 
             echo "Processing $image in file $file"
+            images_found=true
 
             updated_digest=
             crane digest "$image" > digest.log 2> logerror.txt
@@ -133,6 +135,12 @@ runs:
             fi
           done
         done < <(find "${INPUTS_WORKING_DIR}" -type f \( -name "*.yaml" -o -name "*.yml" -o -name "Dockerfile*" -o -name "Makefile*" -o -name "*.sh"  -o -name "*.tf" -o -name "*.tfvars" \) -print0)
+
+        if [ "$images_found" = false ]; then
+          echo "ERROR: No images with digests found in any files"
+          echo "ERROR: No images with digests found in any files" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+        fi
 
         echo "json=${json}" >> "${GITHUB_OUTPUT}"
         
