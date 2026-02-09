@@ -16,7 +16,7 @@ This can be used to keep tags up-to-date whilst maintaining a reproducible build
 Basic usage:
 
 ```yaml
-    - uses: navikt/digestabot@1.1
+    - uses: navikt/digestabot@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         team: YOUR_NAIS_TEAM_HERE # required, used for GAR authentication
@@ -51,9 +51,11 @@ jobs:
       id-token: write # used to sign the commits using gitsign
 
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
 
-    - uses: navikt/digestabot@1.1
+    - uses: navikt/digestabot@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         team: YOUR_NAIS_TEAM_HERE # required, used for GAR authentication
