@@ -69,7 +69,7 @@ runs:
   using: "composite"
   steps:
     - uses: imjasonh/setup-crane@31b88efe9de28ae0ffa220711af4b60be9435f6e # v0.4
-    - uses: nais/login@d6ab5d83f735e9f155eb9d7d29cd20ae46820ea9 # v0
+    - uses: nais/login@bb6c3e1e14e53d40d69d0d092bd2fce2e39ae3bf # v0
       if: ${{ inputs.team }}
       with:
         team: ${{ inputs.team }}
